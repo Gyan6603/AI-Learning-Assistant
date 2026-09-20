@@ -1,4 +1,4 @@
-import { Routes, Route } from "react-router-dom";
+/* import { Routes, Route } from "react-router-dom";
 
 import MainLayout from "./components/layout/MainLayout";
 import Home from "./pages/Home/Home";
@@ -31,6 +31,14 @@ function App() {
 
     </Routes>
   );
+}
+
+export default App;
+*/
+import AppRoutes from "./routes/AppRoutes";
+
+function App() {
+  return <AppRoutes />;
 }
 
 export default App;
