@@ -1,6 +1,5 @@
 import ollama
 
-
 def generate_ai_response(
     message: str,
     document_text: str | None = None
@@ -50,82 +49,115 @@ Answer the following question clearly and simply:
             }
         ],
         options={
-            "num_predict": 300
+            "num_predict": 3000
         }
     )
 
     return response["message"]["content"]
 
-def generate_flashcards(document_text: str) -> str:
+def generate_flashcards(document_text: str, count: int = 3) -> str:
+    import json
 
-    prompt = f"""
+    def generate_batch(batch_count: int) -> list:
+        prompt = f"""
 You are an accurate AI Learning Assistant.
 
 TASK:
-Create exactly 3 educational flashcards from the provided PDF text.
+Create exactly {batch_count} educational flashcards from the provided PDF text.
 
 STRICT ACCURACY RULES:
+
 1. Use ONLY information explicitly present in the PDF.
 2. Never guess, assume, or invent facts.
 3. Do not use outside knowledge.
 4. Every answer must be directly supported by the PDF.
-5. If the PDF does not contain enough information, create fewer flashcards.
-6. Questions must be short and specific.
-7. Answers must be clear and concise.
-8. Use simple Hinglish.
-9. Do not include information that is not mentioned in the PDF.
+5. Questions must be short and specific.
+6. Answers must be clear and concise.
+7. Use simple, clear English only.
+8. Questions and answers must be entirely in English.
+9. Do not use Hindi, Hinglish, or any other language.
+10. Do not include information that is not mentioned in the PDF.
+11. Return exactly {batch_count} flashcards.
+12. Return the complete JSON response.
+13. Do not stop before completing all flashcards.
 
 OUTPUT FORMAT:
-Return ONLY valid JSON in this format:
+
 {{
-  "flashcards": [
-    {{
-      "question": "Question here",
-      "answer": "Answer here"
-    }}
-  ]
+    "flashcards": [
+        {{
+            "question": "Question here",
+            "answer": "Answer here"
+        }}
+    ]
 }}
 
 PDF TEXT:
+
 {document_text[:4000]}
 """
 
-    response = ollama.chat(
-        model="llama3.2:3b",
-        messages=[
-            {
-                "role": "user",
-                "content": prompt
-            }
-        ],
-        format={
-            "type": "object",
-            "properties": {
-                "flashcards": {
-                    "type": "array",
-                    "items": {
-                        "type": "object",
-                        "properties": {
-                            "question": {
-                                "type": "string"
-                            },
-                            "answer": {
-                                "type": "string"
-                            }
-                        },
-                        "required": ["question", "answer"]
-                    }
+        response = ollama.chat(
+            model="llama3.2:3b",
+            messages=[
+                {
+                    "role": "user",
+                    "content": prompt
                 }
+            ],
+            format={
+                "type": "object",
+                "properties": {
+                    "flashcards": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "question": {
+                                    "type": "string"
+                                },
+                                "answer": {
+                                    "type": "string"
+                                }
+                            },
+                            "required": [
+                                "question",
+                                "answer"
+                            ]
+                        }
+                    }
+                },
+                "required": [
+                    "flashcards"
+                ]
             },
-            "required": ["flashcards"]
-        },
-        options={
-            "num_predict": 300
-        }
-    )
+            options={
+                "num_predict": 1200
+            }
+        )
 
-    return response["message"]["content"]
+        result = json.loads(
+            response["message"]["content"]
+        )
 
+        return result["flashcards"]
+
+    # Generate requested number of cards
+    all_flashcards = []
+
+    if count <= 5:
+        all_flashcards = generate_batch(count)
+
+    else:
+        # Generate 5 + remaining cards
+        first_batch = generate_batch(5)
+        second_batch = generate_batch(count - 5)
+
+        all_flashcards = first_batch + second_batch
+
+    return json.dumps({
+        "flashcards": all_flashcards
+    })
 
 def generate_quiz(document_text: str) -> str:
     prompt = f"""
@@ -135,16 +167,18 @@ TASK:
 Create exactly 5 multiple-choice questions from the provided PDF text.
 
 RULES:
+RULES:
 1. Use ONLY information explicitly present in the PDF.
 2. Never guess or invent facts.
 3. Each question must have exactly 4 options.
-4. Use "single" when exactly one option is correct.
-5. Use "multiple" only when more than one option is correct.
-6. For multiple questions, include all correct options.
-7. Every correct answer must be supported by the PDF.
-8. Use simple, clear English.
-9. Return ONLY valid JSON.
-10. Do not add explanations outside JSON.
+4. Every question must have exactly ONE correct answer.
+5. Use "single" for every question.
+6. Never create multiple-correct-answer questions.
+7. The other three options must be incorrect but plausible.
+8. Every correct answer must be directly supported by the PDF.
+9. Use simple, clear English.
+10. Return ONLY valid JSON.
+11. Do not add explanations outside JSON.
 
 OUTPUT FORMAT:
 {{

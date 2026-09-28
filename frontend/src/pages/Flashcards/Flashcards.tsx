@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 import {
   getDocuments,
   generateFlashcards,
+  deleteDocument,
 } from "../../services/api";
 
 import type {
@@ -49,6 +50,44 @@ function Flashcards() {
     loadDocuments();
   }, [navigate]);
 
+  async function handleDeleteSelectedDocument() {
+  if (!selectedDocumentId) {
+    setError("Please select a PDF first.");
+    return;
+  }
+  const confirmed = window.confirm(
+  "Are you sure you want to remove this PDF?"
+  );
+
+  if (!confirmed) {
+    return;
+  }
+
+  try {
+    setError("");
+
+    await deleteDocument(selectedDocumentId);
+
+    setDocuments((currentDocuments) =>
+      currentDocuments.filter(
+        (document) => document.id !== selectedDocumentId
+      )
+    );
+
+    setSelectedDocumentId("");
+    setFlashcards([]);
+
+  } catch (error) {
+    console.error("Failed to delete PDF:", error);
+
+    setError(
+      error instanceof Error
+        ? error.message
+        : "Failed to delete PDF."
+    );
+  }
+}
+
   async function handleGenerate() {
     if (!selectedDocumentId) {
       setError("Please select a PDF first.");
@@ -61,8 +100,9 @@ function Flashcards() {
 
     try {
       const data = await generateFlashcards(
-        `Generate ${flashcardCount} flashcards in Hinglish from this PDF.`,
-        selectedDocumentId
+        `Generate ${flashcardCount} flashcards in English from this PDF.`,
+        selectedDocumentId,
+        Number(flashcardCount)
       );
 
       setFlashcards(data.slice(0, Number(flashcardCount)));
@@ -115,7 +155,14 @@ function Flashcards() {
             ))}
           </select>
         </div>
-
+        {selectedDocumentId && (
+  <button
+    onClick={handleDeleteSelectedDocument}
+    className="mt-3 rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700"
+  >
+    Remove Selected PDF
+  </button>
+)}
         <div>
           <label className="block font-semibold mb-2">
             Number of Flashcards

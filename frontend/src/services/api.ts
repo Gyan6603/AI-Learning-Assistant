@@ -119,6 +119,30 @@ export async function getDocuments(): Promise<Document[]> {
   return data.documents;
 }
 
+export async function deleteDocument(
+  documentId: string
+): Promise<{ success: boolean; message: string }> {
+  const token = localStorage.getItem("access_token");
+
+  const response = await fetch(
+    `http://127.0.0.1:8000/api/documents/${documentId}`,
+    {
+      method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(data.detail || "Failed to delete PDF");
+  }
+
+  return data;
+}
+
 export type Flashcard = {
   question: string;
   answer: string;
@@ -126,7 +150,8 @@ export type Flashcard = {
 
 export async function generateFlashcards(
   message: string,
-  documentId: string
+  documentId: string,
+  count: number
 ): Promise<Flashcard[]> {
   const token = localStorage.getItem("access_token");
 
@@ -141,6 +166,7 @@ export async function generateFlashcards(
       body: JSON.stringify({
         message: message,
         document_id: documentId,
+        count: count,
       }),
     }
   );
@@ -245,4 +271,58 @@ export async function getDashboardStats(): Promise<DashboardStats> {
   }
 
   return response.json();
+}
+
+export type QuizHistoryItem = {
+  document_id: string;
+  score: number;
+  total_questions: number;
+};
+
+export async function getQuizHistory(): Promise<QuizHistoryItem[]> {
+  const token = localStorage.getItem("access_token");
+
+  const response = await fetch(
+    "http://127.0.0.1:8000/api/dashboard/quiz-history",
+    {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+
+  if (!response.ok) {
+    throw new Error("Failed to fetch quiz history");
+  }
+
+  const data = await response.json();
+
+  return data.history;
+}
+
+export async function uploadPdf(file: File) {
+  const token = localStorage.getItem("access_token");
+
+  const formData = new FormData();
+  formData.append("file", file);
+
+  const response = await fetch(
+    "http://127.0.0.1:8000/api/upload-pdf",
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      body: formData,
+    }
+  );
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(data.detail || "PDF upload failed");
+  }
+
+  return data;
 }

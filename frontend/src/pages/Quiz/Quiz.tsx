@@ -5,6 +5,7 @@ import {
   getDocuments,
   generateQuiz,
   submitQuizResult,
+  deleteDocument,
 } from "../../services/api";
 import type {
   Document,
@@ -40,6 +41,50 @@ function Quiz() {
 
     loadDocuments();
   }, [navigate]);
+
+  async function handleDeleteSelectedDocument() {
+  if (!selectedDocumentId) {
+    setError("Please select a PDF first.");
+    return;
+  }
+
+  const confirmed = window.confirm(
+    "Are you sure you want to remove this PDF?"
+  );
+
+  if (!confirmed) {
+    return;
+  }
+
+  try {
+    setError("");
+
+    await deleteDocument(selectedDocumentId);
+
+    setDocuments((currentDocuments) =>
+      currentDocuments.filter(
+        (document) => document.id !== selectedDocumentId
+      )
+    );
+
+    setSelectedDocumentId("");
+
+    // Clear quiz data related to deleted PDF
+    setQuestions([]);
+    setAnswers({});
+    setScore(null);
+    setShowResults(false);
+
+  } catch (error) {
+    console.error("Failed to delete PDF:", error);
+
+    setError(
+      error instanceof Error
+        ? error.message
+        : "Failed to delete PDF."
+    );
+  }
+}
 
   async function handleGenerateQuiz() {
     if (!selectedDocumentId) {
@@ -165,7 +210,14 @@ async function handleSubmitQuiz() {
             </option>
           ))}
         </select>
-
+          {selectedDocumentId && (
+            <button
+              onClick={handleDeleteSelectedDocument}
+              className="mt-3 rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700"
+          >
+            Remove Selected PDF
+          </button>
+          )}
         <button
           onClick={handleGenerateQuiz}
           disabled={loading}

@@ -42,7 +42,8 @@ def get_current_user(
 app.include_router(auth_router)
 class ChatRequest(BaseModel):
     message: str
-    document_id: str | None = None  # Optional field for document ID
+    document_id: str | None = None 
+    count: int = 3 # Optional field for document ID
 class QuizSubmitRequest(BaseModel):
     document_id: str
     score: int
@@ -114,7 +115,7 @@ def create_flashcards(
 
     document_text = document_text[:12000]
 
-    flashcards_text = generate_flashcards(document_text)
+    flashcards_text = generate_flashcards(document_text, request.count)
 
     import json
 
@@ -230,6 +231,42 @@ def get_user_documents(
         "documents": result
     }
 
+@app.delete("/api/documents/{document_id}")
+def delete_document(
+    document_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    from bson import ObjectId
+
+    user_id = current_user["user_id"]
+
+    try:
+        document = documents_collection.find_one({
+            "_id": ObjectId(document_id),
+            "user_id": user_id
+        })
+    except Exception:
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid document ID"
+        )
+
+    if not document:
+        raise HTTPException(
+            status_code=404,
+            detail="Document not found"
+        )
+
+    documents_collection.delete_one({
+        "_id": ObjectId(document_id),
+        "user_id": user_id
+    })
+
+    return {
+        "success": True,
+        "message": "PDF deleted successfully"
+    }
+
 @app.post("/api/quiz")
 def create_quiz(
     request: ChatRequest,
@@ -318,4 +355,27 @@ def get_dashboard_stats(
         "total_documents": total_documents,
         "total_quizzes": total_quizzes,
         "average_score": round(average_score, 2)
+    }
+
+@app.get("/api/dashboard/quiz-history")
+def get_quiz_history(
+    current_user: dict = Depends(get_current_user)
+):
+    user_id = current_user["user_id"]
+
+    history = list(
+        quiz_attempts_collection.find(
+            {"user_id": user_id},
+            {
+                "_id": 0,
+                "document_id": 1,
+                "score": 1,
+                "total_questions": 1
+            }
+        ).sort("_id", -1)
+    )
+
+    return {
+        "success": True,
+        "history": history
     }
