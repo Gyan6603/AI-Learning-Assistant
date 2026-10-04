@@ -7,7 +7,7 @@ def generate_ai_response(
 
     if document_text:
         prompt = f"""
-You are an AI Learning Assistant.
+You are an CogniVerse.
 
 IMPORTANT INSTRUCTIONS:
 - The document text below is extracted from the user's PDF.
@@ -33,7 +33,7 @@ IMPORTANT INSTRUCTIONS:
 
     else:
         prompt = f"""
-You are an AI Learning Assistant.
+You are an CogniVerse.
 
 Answer the following question clearly and simply:
 
@@ -60,7 +60,7 @@ def generate_flashcards(document_text: str, count: int = 3) -> str:
 
     def generate_batch(batch_count: int) -> list:
         prompt = f"""
-You are an accurate AI Learning Assistant.
+You are an accurate CogniVerse.
 
 TASK:
 Create exactly {batch_count} educational flashcards from the provided PDF text.
@@ -161,7 +161,7 @@ PDF TEXT:
 
 def generate_quiz(document_text: str) -> str:
     prompt = f"""
-You are an accurate AI Learning Assistant.
+You are an accurate CogniVerse.
 
 TASK:
 Create exactly 5 multiple-choice questions from the provided PDF text.

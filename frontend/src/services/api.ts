@@ -1,3 +1,6 @@
+const API_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:8000";
+
 function handleUnauthorized(response: Response) {
   if (response.status === 401) {
     localStorage.removeItem("access_token");
@@ -6,9 +9,7 @@ function handleUnauthorized(response: Response) {
 }
 
 export async function checkBackendHealth() {
-  const response = await fetch(
-    "http://127.0.0.1:8000/api/health"
-  );
+  const response = await fetch(`${API_BASE_URL}/api/health`);
 
   if (!response.ok) {
     throw new Error("Backend request failed");
@@ -16,25 +17,24 @@ export async function checkBackendHealth() {
 
   return response.json();
 }
+
 export async function sendChatMessage(
   message: string,
   documentId: string | undefined
-  ) {
+) {
   const token = localStorage.getItem("access_token");
-  const response = await fetch(
-    "http://127.0.0.1:8000/api/chat",
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({
-        message: message,
-        document_id: documentId?? null,
-      }),
-    }
-  );
+
+  const response = await fetch(`${API_BASE_URL}/api/chat`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({
+      message,
+      document_id: documentId ?? null,
+    }),
+  });
 
   if (!response.ok) {
     handleUnauthorized(response);
@@ -49,15 +49,15 @@ export async function loginUser(
   password: string
 ) {
   const response = await fetch(
-    "http://127.0.0.1:8000/api/auth/login",
+    `${API_BASE_URL}/api/auth/login`,
     {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        email: email,
-        password: password,
+        email,
+        password,
       }),
     }
   );
@@ -68,11 +68,12 @@ export async function loginUser(
 
   return response.json();
 }
+
 export async function getProfile() {
   const token = localStorage.getItem("access_token");
 
   const response = await fetch(
-    "http://127.0.0.1:8000/api/auth/profile",
+    `${API_BASE_URL}/api/auth/profile`,
     {
       method: "GET",
       headers: {
@@ -100,7 +101,7 @@ export async function getDocuments(): Promise<Document[]> {
   const token = localStorage.getItem("access_token");
 
   const response = await fetch(
-    "http://127.0.0.1:8000/api/documents",
+    `${API_BASE_URL}/api/documents`,
     {
       method: "GET",
       headers: {
@@ -125,7 +126,7 @@ export async function deleteDocument(
   const token = localStorage.getItem("access_token");
 
   const response = await fetch(
-    `http://127.0.0.1:8000/api/documents/${documentId}`,
+    `${API_BASE_URL}/api/documents/${documentId}`,
     {
       method: "DELETE",
       headers: {
@@ -156,7 +157,7 @@ export async function generateFlashcards(
   const token = localStorage.getItem("access_token");
 
   const response = await fetch(
-    "http://127.0.0.1:8000/api/flashcards",
+    `${API_BASE_URL}/api/flashcards`,
     {
       method: "POST",
       headers: {
@@ -164,9 +165,9 @@ export async function generateFlashcards(
         Authorization: `Bearer ${token}`,
       },
       body: JSON.stringify({
-        message: message,
+        message,
         document_id: documentId,
-        count: count,
+        count,
       }),
     }
   );
@@ -193,7 +194,7 @@ export async function generateQuiz(
   const token = localStorage.getItem("access_token");
 
   const response = await fetch(
-    "http://127.0.0.1:8000/api/quiz",
+    `${API_BASE_URL}/api/quiz`,
     {
       method: "POST",
       headers: {
@@ -224,7 +225,7 @@ export async function submitQuizResult(
   const token = localStorage.getItem("access_token");
 
   const response = await fetch(
-    "http://127.0.0.1:8000/api/quiz/submit",
+    `${API_BASE_URL}/api/quiz/submit`,
     {
       method: "POST",
       headers: {
@@ -233,7 +234,7 @@ export async function submitQuizResult(
       },
       body: JSON.stringify({
         document_id: documentId,
-        score: score,
+        score,
         total_questions: totalQuestions,
       }),
     }
@@ -257,7 +258,7 @@ export async function getDashboardStats(): Promise<DashboardStats> {
   const token = localStorage.getItem("access_token");
 
   const response = await fetch(
-    "http://127.0.0.1:8000/api/dashboard/stats",
+    `${API_BASE_URL}/api/dashboard/stats`,
     {
       method: "GET",
       headers: {
@@ -283,7 +284,7 @@ export async function getQuizHistory(): Promise<QuizHistoryItem[]> {
   const token = localStorage.getItem("access_token");
 
   const response = await fetch(
-    "http://127.0.0.1:8000/api/dashboard/quiz-history",
+    `${API_BASE_URL}/api/dashboard/quiz-history`,
     {
       method: "GET",
       headers: {
@@ -308,7 +309,7 @@ export async function uploadPdf(file: File) {
   formData.append("file", file);
 
   const response = await fetch(
-    "http://127.0.0.1:8000/api/upload-pdf",
+    `${API_BASE_URL}/api/upload-pdf`,
     {
       method: "POST",
       headers: {

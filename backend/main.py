@@ -60,7 +60,7 @@ app.add_middleware(
 @app.get("/")
 def root():
     return {
-        "message": "AI Learning Assistant Backend is running!"
+        "message": "CogniVerse Backend is running!"
     }
 
 
