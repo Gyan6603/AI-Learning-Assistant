@@ -48,14 +48,19 @@ class QuizSubmitRequest(BaseModel):
     document_id: str
     score: int
     total_questions: int
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173","http://127.0.0.1:5173"],
+    allow_origins=[
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+        "https://ai-learning-assistant-nine-beta.vercel.app",
+        "https://ai-learning-assistant-nine-beta-git-main-gyan6603s-projects.vercel.app",
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
 
 @app.get("/")
 def root():
