@@ -1,4 +1,15 @@
+import os
 import ollama
+
+OLLAMA_HOST = os.getenv("OLLAMA_HOST", "http://127.0.0.1:11434").rstrip("/")
+OLLAMA_PROXY_TOKEN = os.getenv("OLLAMA_PROXY_TOKEN", "")
+
+ollama_client = ollama.Client(
+    host=OLLAMA_HOST,
+    headers={
+        "Authorization": f"Bearer {OLLAMA_PROXY_TOKEN}"
+    } if OLLAMA_PROXY_TOKEN else {}
+)
 
 def generate_ai_response(
     message: str,
@@ -40,7 +51,7 @@ Answer the following question clearly and simply:
 {message}
 """
 
-    response = ollama.chat(
+    response = ollama_client.chat(
         model="llama3.2:3b",
         messages=[
             {
@@ -97,7 +108,7 @@ PDF TEXT:
 {document_text[:4000]}
 """
 
-        response = ollama.chat(
+        response = ollama_client.chat(
             model="llama3.2:3b",
             messages=[
                 {
@@ -203,7 +214,7 @@ PDF TEXT:
 {document_text[:4000]}
 """
 
-    response = ollama.chat(
+    response = ollama_client.chat(
         model="llama3.2:3b",
         messages=[
             {
